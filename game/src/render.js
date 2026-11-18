@@ -396,9 +396,9 @@ export function createRenderer(canvas) {
     ctx.restore();
     if (boss.flash > 0) {
       ctx.save();
-      ctx.globalAlpha = boss.flash * 0.4;
+      ctx.globalAlpha = boss.flash * 0.18;
       ctx.beginPath();
-      ctx.arc(boss.x, boss.y, boss.radius + 16, 0, Math.PI * 2);
+      ctx.arc(boss.x, boss.y, boss.radius + 4, 0, Math.PI * 2);
       ctx.fillStyle = '#ffffff';
       ctx.fill();
       ctx.restore();
@@ -686,7 +686,7 @@ export function createRenderer(canvas) {
     ctx.textBaseline = 'top';
     legend.forEach(([kind, label], i) => {
       const x = 268 + i * 150;
-      drawEnemy({ kind, x, y: 622, t: state.time, rot: state.time * 0.7, hp: 9, maxHp: 9, flash: 0, dived: false, vy: 1, vx: 0 }, state.time);
+      drawEnemy({ kind, x, y: 622, t: state.time, rot: state.time * 0.7, hp: 9, maxHp: 9, flash: 0, dived: false, vy: 1, vx: 0, radius: 20 }, state.time);
       text(label, x, 652, 13, PALETTE.muted, 'center', 700);
     });
   }

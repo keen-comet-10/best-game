@@ -110,20 +110,30 @@ export function stageShot(name, world) {
   }
 
   if (name === 'win') {
-    // The kill shot itself: the boss starts one volley from death, the
+    // The kill shot itself: a full run's tally is staged (score, kills,
+    // accuracy, combo, time), the boss starts one volley from death, the
     // autopilot finishes her, and the explosion blooms behind the panel.
     world.startAtWave(4);
     state.player.weapon = 5;
     state.player.shield = true;
     state.player.lives = 2;
-    state.score = 39850;
+    state.score = 24850;
+    state.stats.kills = 79;
+    state.stats.shots = 640;
+    state.stats.hits = 410;
+    state.stats.maxCombo = 23;
+    state.stats.bombsUsed = 1;
+    state.combo.count = 23;
+    state.combo.timer = 2.6;
+    state.combo.mult = 4;
+    state.runTime = 127;
     state.boss.hp = 14;
     let guard = 0;
     while (state.outcome !== 'win' && guard < 1200) {
       world.step(STEP, autopilot(state), false);
       guard += 1;
     }
-    for (let i = 0; i < 46; i += 1) world.stepAmbient(STEP);
+    for (let i = 0; i < 22; i += 1) world.stepAmbient(STEP);
     return { screen: SCREEN_WIN, best: state.score };
   }
 

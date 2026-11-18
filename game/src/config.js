@@ -32,7 +32,7 @@ export const BOSS = {
   name: 'VOIDMOTHER',
   maxHp: 260,
   radius: 62,
-  enterY: 118,
+  enterY: 148,
   score: 5000,
 };
 

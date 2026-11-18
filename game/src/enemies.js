@@ -205,7 +205,7 @@ export function updateBoss(boss, dt, ctx) {
   }
 
   boss.x = FIELD.width / 2 + Math.sin(boss.t * 0.45) * 305;
-  boss.y = BOSS.enterY + Math.sin(boss.t * 0.8) * 24;
+  boss.y = BOSS.enterY + Math.sin(boss.t * 0.8) * 16;
 
   const enraged = boss.hp <= boss.maxHp / 3;
   boss.attackTimer -= dt;
