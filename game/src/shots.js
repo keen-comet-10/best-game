@@ -11,44 +11,66 @@ import { SCREEN_PLAY, SCREEN_TITLE, SCREEN_WIN } from './render.js';
 const IDLE = { moveX: 0, moveY: 0, fire: false, focus: false, bomb: false };
 
 /**
- * A workmanlike pilot: it hovers low, lines up under the nearest threat,
- * fires without pause, and sidesteps any bullet that gets close.
+ * A workmanlike pilot: it dodges bullets and hulls first, scoops up any
+ * falling pod when the sky is clear, and otherwise hovers on a home row
+ * under the nearest enemy, firing without pause.
  */
 function autopilot(state) {
   const player = state.player;
   if (!player.alive) return IDLE;
-  let targetX = FIELD.width / 2;
-  let bestDist = Infinity;
-  const consider = (x, y) => {
-    const d = (x - player.x) * (x - player.x) + (y - player.y) * (y - player.y);
-    if (d < bestDist) {
-      bestDist = d;
-      targetX = x;
-    }
-  };
-  for (const e of state.enemies) if (e.active) consider(e.x, e.y);
-  if (state.boss.active) consider(state.boss.x, state.boss.y);
 
-  let moveX = targetX > player.x + 16 ? 1 : targetX < player.x - 16 ? -1 : 0;
-  let moveY = 0;
-  // Dodge: the nearest incoming bullet inside a small box wins over aiming.
   let threat = null;
-  let threatDist = 130 * 130;
+  let threatDist = 140 * 140;
   for (const b of state.eBullets) {
     if (!b.active) continue;
-    const d = (b.x - player.x) * (b.x - player.x) + (b.y - player.y) * (b.y - player.y);
-    if (d < threatDist) {
-      threatDist = d;
-      threat = b;
-    }
+    const d = (b.x - player.x) ** 2 + (b.y - player.y) ** 2;
+    if (d < threatDist) { threatDist = d; threat = b; }
   }
-  if (threat) {
-    moveX = threat.x <= player.x ? 1 : -1;
-    if (player.x < 60) moveX = 1;
-    if (player.x > FIELD.width - 60) moveX = -1;
-    moveY = threat.y < player.y ? 1 : 0;
+  let body = null;
+  let bodyDist = 110 * 110;
+  for (const e of state.enemies) {
+    if (!e.active) continue;
+    const d = (e.x - player.x) ** 2 + (e.y - player.y) ** 2;
+    if (d < bodyDist) { bodyDist = d; body = e; }
   }
-  return { moveX, moveY, fire: true, focus: false, bomb: false };
+  const danger = threat || body;
+  if (danger) {
+    let moveX = danger.x <= player.x ? 1 : -1;
+    if (player.x < 70) moveX = 1;
+    if (player.x > FIELD.width - 70) moveX = -1;
+    const moveY = danger.y < player.y - 30 ? 1 : danger.y > player.y + 30 ? -1 : 0;
+    return { moveX, moveY, fire: true, focus: false, bomb: false };
+  }
+
+  let pod = null;
+  let podDist = Infinity;
+  for (const p of state.powerups) {
+    if (!p.active) continue;
+    const d = (p.x - player.x) ** 2 + (p.y - player.y) ** 2;
+    if (d < podDist) { podDist = d; pod = p; }
+  }
+  if (pod) {
+    return {
+      moveX: pod.x > player.x + 12 ? 1 : pod.x < player.x - 12 ? -1 : 0,
+      moveY: pod.y > player.y + 12 ? 1 : pod.y < player.y - 12 ? -1 : 0,
+      fire: true, focus: false, bomb: false,
+    };
+  }
+
+  let targetX = FIELD.width / 2;
+  let bestDist = Infinity;
+  for (const e of state.enemies) {
+    if (!e.active || e.y >= player.y) continue;
+    const d = (e.x - player.x) ** 2 + (e.y - player.y) ** 2;
+    if (d < bestDist) { bestDist = d; targetX = e.x; }
+  }
+  if (state.boss.active) targetX = state.boss.x;
+  const homeY = 600;
+  return {
+    moveX: targetX > player.x + 14 ? 1 : targetX < player.x - 14 ? -1 : 0,
+    moveY: player.y < homeY - 10 ? 1 : player.y > homeY + 10 ? -1 : 0,
+    fire: true, focus: false, bomb: false,
+  };
 }
 
 function runSteps(world, steps, control) {
@@ -65,12 +87,13 @@ export function stageShot(name, world) {
   const state = world.state;
 
   if (name === 'play') {
-    // Mid-campaign: wave 3, Crossfire, with a level-3 cannon and a shield.
-    world.startAtWave(2);
+    // Mid-campaign: wave 4, Swarmfall, at the moment the mite wall crosses
+    // the loom line — the densest honest second of the wave.
+    world.startAtWave(3);
     state.player.weapon = 3;
     state.player.shield = true;
     state.player.bombs = 3;
-    runSteps(world, 545, autopilot);
+    runSteps(world, 940, autopilot);
     return { screen: SCREEN_PLAY, best: state.score };
   }
 
@@ -81,7 +104,7 @@ export function stageShot(name, world) {
     state.player.shield = true;
     state.player.bombs = 2;
     state.score = 31400;
-    state.boss.hp = 148;
+    state.boss.hp = 235;
     runSteps(world, 430, autopilot);
     return { screen: SCREEN_PLAY, best: state.score };
   }

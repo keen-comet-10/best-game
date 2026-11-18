@@ -147,7 +147,6 @@ export function createWorld(random) {
       b.y = y;
       b.vx = vx;
       b.vy = vy;
-      state.stats.shots += 1;
       return;
     }
   }
@@ -156,6 +155,7 @@ export function createWorld(random) {
     const { x, y } = player;
     const top = y - 18;
     const level = player.weapon;
+    state.stats.shots += 1; // One "shot" per volley, however many bolts it holds.
     if (level === 1) {
       firePlayerBullet(x, top, 0, -PLAYER_BULLET_SPEED);
     } else if (level === 2) {
